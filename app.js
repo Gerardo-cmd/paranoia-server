@@ -132,16 +132,81 @@ app.delete('/room', async (req, res) => {
     return;
   }
   else {
-    const deleteRoom = await db.collection('rooms').doc(`${req.body.roomCode}`).delete();
-    res.send({
-      "code": 200,
-      "msg": "Room deleted"
-    });
-    return;
+    await db.collection('rooms').doc(`${req.body.roomCode}`).delete();
   }
+  const collectionRef = db.collection(`${req.body.roomCode}-Users`);
+  const snapshot = await collectionRef.get();
+  snapshot.forEach(doc => {
+    doc._ref.delete();
+  });
+  res.send({
+    "code": 200,
+    "msg": "Room deleted"
+  })
 });
 
 // QUESTIONS ENDPOINTS
+
+// Adds a quesion to an existing room
+app.post('/new-question', async (req, res) => {
+  if (!req.body.askerId || !req.body.roomCode  || !req.body.victimId || !req.body.message || ((req.body.shown === null) || (req.body.shown === undefined))) {
+    res.send({
+      "code": 400,
+      "data": "Must include all info"
+    });
+    return;
+  }
+  const roomRef = await db.collection('rooms').doc(`${req.body.roomCode}`).get();
+  if (!roomRef.exists) {
+    res.send({
+      "code": 401,
+      "msg": "No room was found with that code"
+    });
+    return;
+  }
+  //verifyUsers();
+  console.log(roomRef);
+  let questions = roomRef._fieldsProto.questions.mapValue.fields;
+  const length = Object.keys(questions).length;
+  console.log(length);
+  let newQuestions = {};
+  // If there are already questions in the room, copy them into the "newQuestions" object
+  for (const [key, value] of Object.entries(questions)) {
+    let question = {};
+    console.log("Now entering the fields of the question");
+    for (const [field, value1] of Object.entries(value.mapValue.fields)) {
+      if (field === "shown") {
+        question[field] = value1.booleanValue;
+      }
+      else {
+        question[field] = value1.stringValue;
+      }
+    }
+    console.log(question);
+    newQuestions[key] = question;
+  }
+
+  //Add the new question
+  newQuestions[`${length}`] = {
+    askerId: req.body.askerId,
+    victimId: req.body.victimId,
+    message: req.body.message,
+    shown: req.body.shown
+  }
+  const ref = db.collection('rooms').doc(`${req.body.roomCode}`);
+
+  // Set the 'questions' field in the ref
+  await ref.update({
+    questions: newQuestions
+  });
+  res.send({
+    "code": 200,
+    "data": {
+      "questionKey": length,
+    }
+  });
+  return;
+});
 
 // ANSWER ENDPOINTS
 
