@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Activate cors
 app.use(cors({
-    origin: ['http://localhost:3000'],
+    origin: ['http://localhost:3000', 'https://paranoia-game.netlify.app'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     methods: ['GET, POST', 'DELETE'],
     optionsSuccessStatus: 200
@@ -114,7 +114,7 @@ app.post('/new-player', async (req, res) => {
   return;
 });
 
-// Deletes a room **ONLY DELETES ROOM NOT THE "ROOM-USERS COLLECTION** Will work on that later"
+// Deletes a room
 app.delete('/room', async (req, res) => {
   if (!req.body.roomCode) {
     res.send({
@@ -170,6 +170,7 @@ app.post('/new-question', async (req, res) => {
   const length = Object.keys(questions).length;
   console.log(length);
   let newQuestions = {};
+
   // If there are already questions in the room, copy them into the "newQuestions" object
   for (const [key, value] of Object.entries(questions)) {
     let question = {};
@@ -208,6 +209,6 @@ app.post('/new-question', async (req, res) => {
   return;
 });
 
-// ANSWER ENDPOINTS
+// ANSWERS ENDPOINTS
 
 app.listen(process.env.PORT || 5000, () => console.log("server starting on port 5000!"));
