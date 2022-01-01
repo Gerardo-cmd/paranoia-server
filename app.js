@@ -71,7 +71,7 @@ app.post('/new-room', async (req, res) => {
   await roomRef.set(newRoom);
   res.status(200).send({
     "data": {
-      roomCode
+      roomId: roomCode
     }
   });
   return;
@@ -102,7 +102,7 @@ app.post('/new-player', async (req, res) => {
   const userRef = await db.collection(`${req.body.roomCode}-Users`).doc(`${req.body.userId}`).set({name: req.body.userId, creator: false});
   res.status(200).send({
     "data": {
-      roomCode: req.body.roomCode,
+      roomId: req.body.roomCode,
       name: req.body.userId
     }
   });
